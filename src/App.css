@@ -1,38 +1,57 @@
-.App {
-  text-align: center;
+.map-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  width:100%;
+  height: 100vh;
+  transition: all 1s;
+}
+.mapboxgl-control-container{
+  display: none;
+}
+.popup-text strong {
+  display: block;
+  font-size: 10px;
+  color: blue;
+}
+.popup-text{
+  font-size: 13px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+
+
+/* marker css starts */
+#marker {
+  background-image: url('https://docs.mapbox.com/mapbox-gl-js/assets/washington-monument.jpg');
+  background-size: cover;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.mapboxgl-popup {
+  max-width: 400px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.mapboxgl-popup-content {
+  border-radius: 50px;
+  width: 180px;
+  padding: 0px 0px 0px;
 }
 
-.App-link {
-  color: #61dafb;
+.heading {
+  font-weight: bold;
+  margin: -11px 0px -8px 23px;
+  font-size: 14px;
+  color: blue;
 }
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.sub-heading{
+  color: blue;
+  color: #7a7a7a;
+  font-size: 14px;
+  padding: 0px 0px 0px 21px;
 }
+/* markers css ends */
