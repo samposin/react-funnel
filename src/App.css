@@ -13,11 +13,17 @@
 }
 .popup-text strong {
   display: block;
-  font-size: 10px;
   color: blue;
+  margin: -11px 0px -8px 10px;
+  font-size: 14px;
+  padding: 0px 10px 10px 0px;
 }
 .popup-text{
-  font-size: 13px;
+  font-size: 13px;  color: blue;
+  color: #7a7a7a;
+  font-size: 14px;
+  /* padding: 0px 0px 0px 21px; */
+  padding: 0px 10px 10px 20px;
 }
 
 
@@ -42,16 +48,15 @@
   padding: 0px 0px 0px;
 }
 
-.heading {
-  font-weight: bold;
-  margin: -11px 0px -8px 23px;
-  font-size: 14px;
-  color: blue;
-}
-.sub-heading{
-  color: blue;
-  color: #7a7a7a;
-  font-size: 14px;
-  padding: 0px 0px 0px 21px;
-}
 /* markers css ends */
+
+.custom-marker {
+  border: none;
+  cursor: pointer;
+  height: 45px;
+  width: 45px;
+  padding-left: 12px;
+  padding-top: 7px;
+  background-size: contain;
+  /* background-color: rgba(0, 0, 0, 0); */
+}

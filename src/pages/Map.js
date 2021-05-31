@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
+import * as turf from "@turf/turf";
 const mapboxgl = require("mapbox-gl/dist/mapbox-gl.js");
+
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiaGFtemFoYWQiLCJhIjoiY2trY2YybmozMGo3bzJ1b2FpcTh4ZmdpeiJ9.urpUJIK3zKrxCaEKXNe9Rw";
@@ -16,11 +18,7 @@ function Map() {
     var popup = new mapboxgl.Popup({
         offset: 25,
         closeButton: false
-    }).setHTML(
-        '   <p class="heading">Region</p>\
-            <p class="sub-heading">North Central Florida </p.\
-        '
-    );
+    }).setHTML(`<div class="popup-text"><strong>Region </strong>North Central Florida </div>`);
 
     // create DOM element for the marker
     var el = document.createElement('div');
@@ -31,6 +29,194 @@ function Map() {
         .setLngLat(monument)
         .setPopup(popup) // sets a popup on this marker
         .addTo(map);
+  }
+
+  const createMarkers = (mapInstance) =>{
+
+
+        // images layers
+        const images =[
+          {url: './icons/20.png', id: 'image_20'},
+          {url: './icons/40.png', id: 'image_40'},
+          {url: './icons/60.png', id: 'image_60'},
+          {url: './icons/80.png', id: 'image_80'},
+          {url: './icons/100.png', id: 'image_100'}
+        ];
+        images.map(img => {
+          mapInstance.loadImage(img.url, function (error, res) {
+            if (error) throw error;
+              mapInstance.addImage(img.id, res)
+          })
+        });
+    
+
+        mapInstance.addSource(`all-source`, {
+          type: "vector",
+          url: `mapbox://hamzahad.4tdbv2s6`,
+        });
+
+        mapInstance.addLayer(
+          {
+            'id': `all-source-layer`,
+            'type': "fill",
+            'source': `all-source`,
+            "source-layer": `Neighborhood-89bxo1`,
+            // 'maxzoom': maxZoom,
+            // 'minzoom': minZoom,
+            'paint': {
+              'fill-color': "#E2E3F0",
+              "fill-opacity": 0.2,
+            },
+            filter : ["==", "$type", "Polygon"]
+          }
+        );
+    
+        // mapInstance.addLayer({
+        //   id: 'all-layer',
+        //   type: 'symbol',
+        //   source: 'all-source',
+        //   "source-layer": "All_In_One-41lsuj",
+        //   // 'maxzoom': maxZoom,
+        //   // 'minzoom': minZoom,
+        //   layout: {
+        //     "icon-size": 0.068,
+        //     "icon-offset": [-5, -50],
+        //     "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        //     "text-offset": [0, -1],
+        //     "text-anchor": "top",
+        //     "text-size": 11,
+        //     "icon-allow-overlap": true,
+        //     "text-field": ["concat", ["get", "Score"], "%"],
+        //     "icon-image": "image_20",
+        //     // [
+        //     //   'case',
+        //     //   ['<=', ["get", "Score"], 20],
+        //     //   "image_20",
+        //     //   ['<=', ["get", "Score"], 40],
+        //     //   "image_20",
+        //     //   ['<=', ["get", "Score"], 60],
+        //     //   "image_20",
+        //     //   ['<=', ["get", "Score"], 80],
+        //     //   "image_20",
+        //     //   [">", ["get", "Score"], 80],
+        //     //   "image_20",
+        //     //   "image_20"
+        //     // ]
+        //   }
+        // });
+    
+        //images layer
+    
+
+    setTimeout(() => {
+      let featuresArr = [];
+      var features = mapInstance.queryRenderedFeatures({ layers: ['all-source-layer'] });
+      for (let index = 0; index < features.length; index++) {
+        var f = features[index];
+        filtersAndScores.map( (obj) => {
+          if(obj.Neighborhood == f.properties.Neighborhood){
+                f.surface = turf.area(f);
+                f.center = turf.center(f);
+                f.bounds = turf.bbox(f);
+                var filters = obj.filters;
+                // var summed = 0;
+                // var count = Object.keys(filters).length;
+                // for (var key in filters) {
+                //   summed += filters[key];
+                // };
+                // f.properties.sum = summed;
+                // f.properties.count = count;
+
+                f.properties.Score = 85;
+                featuresArr.push({
+                  type: 'Feature',
+                  properties: f.properties,
+                  geometry: {
+                    type: 'Point',
+                    coordinates: f.center,
+                  },
+                });
+
+                // var center = f.center.geometry.coordinates;
+                // var el = document.createElement('div');
+                // el.className = 'marker custom-marker';
+                // var score = Math.floor(Math.random() * 100);
+                // el.innerHTML = score;
+                // el.style.backgroundImage = `url(./icons/20.png)`;
+                // if(score >= 20)
+                // el.style.backgroundImage = `url(./icons/20.png)`;
+
+                // if(score > 20 && score <= 40)
+                // el.style.backgroundImage = `url(./icons/40.png)`;
+
+                // if(score > 40 && score <= 60)
+                // el.style.backgroundImage = `url(./icons/60.png)`;
+
+                // if(score > 60 && score <= 80)
+                // el.style.backgroundImage = `url(./icons/80.png)`;
+
+                // if(score > 80 && score <= 100)
+                // el.style.backgroundImage = `url(./icons/100.png)`;
+                // var Marker = new mapboxgl.Marker(el)
+                //   .setLngLat(center)
+                //   .addTo(mapInstance);
+                // Marker.getElement().addEventListener('click', () => {
+                //   // setPlaceTypeObj(props);
+                // });
+            }
+        });
+      }
+      var jsonObject = {
+        type: 'FeatureCollection',
+        features: featuresArr,
+      };
+      if (mapInstance.getLayer('test-layer')) {
+        mapInstance.getSource('test-source').setData(jsonObject);
+        console.log("if")
+      } else {
+        console.log("else")
+
+      mapInstance.addSource('test-source', {
+        type: 'geojson',
+        data: jsonObject,
+        // cluster: true,
+      });
+      mapInstance.addLayer({
+        id: 'test-layer',
+        type: 'symbol',
+        source: 'test-source',
+        // 'maxzoom': maxZoom,
+        // 'minzoom': minZoom,
+        layout: {
+          "icon-size": 0.068,
+          "icon-offset": [-5, -50],
+          "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+          "text-offset": [0, -1],
+          "text-anchor": "top",
+          "text-size": 11,
+          "icon-allow-overlap": true,
+          "text-field": ["concat", ["get", "Score"], "%"],
+          "icon-image": "image_20",
+          // [
+          //   'case',
+          //   ['<=', ["get", "Score"], 20],
+          //   "image_20",
+          //   ['<=', ["get", "Score"], 40],
+          //   "image_20",
+          //   ['<=', ["get", "Score"], 60],
+          //   "image_20",
+          //   ['<=', ["get", "Score"], 80],
+          //   "image_20",
+          //   [">", ["get", "Score"], 80],
+          //   "image_20",
+          //   "image_20"
+          // ]
+        }
+      });
+    }
+    console.log(jsonObject)
+
+    }, 5000);
   }
 
   const loadRegionSourceAndLayers = (mapInstance) => {
@@ -581,77 +767,6 @@ function Map() {
   //   })
   // }, [filtersAndScores]);
 
-
-  const loadMarkers = (mapInstance) => {
-
-    var minZoom = 3;
-    var maxZoom = 7;
-
-    mapInstance.addSource(`all-layer`, {
-      type: "vector",
-      url: `mapbox://hamzahad.44pt4lkm`,
-    });
-
-
-    const images =[
-      {url: './icons/20.png', id: 'image_20'},
-      {url: './icons/40.png', id: 'image_40'},
-      {url: './icons/60.png', id: 'image_60'},
-      {url: './icons/80.png', id: 'image_80'},
-      {url: './icons/100.png', id: 'image_100'}
-    ];
-    images.map(img => {
-      mapInstance.loadImage(img.url, function (error, res) {
-        if (error) throw error;
-          mapInstance.addImage(img.id, res)
-      })
-    });
-
-      mapInstance.addLayer({
-        id: 'exit-devices-layer',
-        type: 'symbol',
-        source: 'all-layer',
-        "source-layer": "All_In_One-41lsuj",
-        // 'maxzoom': maxZoom,
-        // 'minzoom': minZoom,
-        layout: {
-          "icon-size": 0.068,
-          "text-field": ["concat", ["get", "Score"], "%"],
-          "icon-image": "image_20",
-          // [
-          //   'case',
-          //   ['<=', ["get", "Score"], 20],
-          //   "image_20",
-          //   ['<=', ["get", "Score"], 40],
-          //   "image_20",
-          //   ['<=', ["get", "Score"], 60],
-          //   "image_20",
-          //   ['<=', ["get", "Score"], 80],
-          //   "image_20",
-          //   [">", ["get", "Score"], 80],
-          //   "image_20",
-          //   "image_20"
-          // ]
-        }
-      });
-
-      // [
-      //   "case",
-      //   ["<=", ["get", "Score"], 20],
-      //   "image_20",
-      //   ["<=", ["get", "Score"], 40],
-      //   "image_40",
-      //   ["<=", ["get", "Score"], 60],
-      //   "image_60",
-      //   ["<=", ["get", "Score"], 80],
-      //   "image_80",
-      //   [">", ["get", "Score"], 80],
-      //   "image_100",
-
-      //   "image_100",
-      // ]
-  }
-
   useEffect(() => {
 
     getAllFiltersScoresFromJson();
@@ -666,8 +781,7 @@ function Map() {
 
     loadMarker(map);
     map.on('load', function(){
-
-      loadMarkers(map);
+      createMarkers(map);
         loadRegionSourceAndLayers(map);
         loadCountySourceAndLayers(map);
         loadCitySourceAndLayers(map);
