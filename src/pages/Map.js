@@ -7,9 +7,12 @@ const mapboxgl = require("mapbox-gl/dist/mapbox-gl.js");
 mapboxgl.accessToken =
   "pk.eyJ1IjoiaGFtemFoYWQiLCJhIjoiY2trY2YybmozMGo3bzJ1b2FpcTh4ZmdpeiJ9.urpUJIK3zKrxCaEKXNe9Rw";
 
+var mapObj;
 function Map() {
   const mapContainer = useRef();
   const [filtersAndScores, setFiltersAndScores] = useState([]);
+  const [scores, setScores] = useState([]);
+
 
   const loadMarker = (map) => {
     // var monument = [-77.0353, 38.8895];
@@ -33,7 +36,7 @@ function Map() {
 
   const createMarkers = (mapInstance) =>{
 
-
+        mapInstance =  mapObj;
         // images layers
         const images =[
           {url: './icons/20.png', id: 'image_20'},
@@ -111,30 +114,25 @@ function Map() {
     setTimeout(() => {
       let featuresArr = [];
       var features = mapInstance.queryRenderedFeatures({ layers: ['all-source-layer'] });
+      var center, surface, bounds;
       for (let index = 0; index < features.length; index++) {
         var f = features[index];
-        filtersAndScores.map( (obj) => {
-          if(obj.Neighborhood == f.properties.Neighborhood){
-                f.surface = turf.area(f);
-                f.center = turf.center(f);
-                f.bounds = turf.bbox(f);
-                var filters = obj.filters;
-                // var summed = 0;
-                // var count = Object.keys(filters).length;
-                // for (var key in filters) {
-                //   summed += filters[key];
-                // };
-                // f.properties.sum = summed;
-                // f.properties.count = count;
 
-                f.properties.Score = 85;
+
+
+        
+        scores.map( (obj) => {
+          if(obj.Neighborhood == f.properties.Neighborhood){
+            console.log(obj.Neighborhood, f.properties.Neighborhood, parseInt(obj.Score));
+                surface = turf.area(f);
+                center = turf.center(f);
+                bounds = turf.bbox(f);
+
+                f.properties.Score = parseInt(obj.Score);
                 featuresArr.push({
                   type: 'Feature',
                   properties: f.properties,
-                  geometry: {
-                    type: 'Point',
-                    coordinates: f.center,
-                  },
+                  geometry: center.geometry,
                 });
 
                 // var center = f.center.geometry.coordinates;
@@ -172,10 +170,7 @@ function Map() {
       };
       if (mapInstance.getLayer('test-layer')) {
         mapInstance.getSource('test-source').setData(jsonObject);
-        console.log("if")
       } else {
-        console.log("else")
-
       mapInstance.addSource('test-source', {
         type: 'geojson',
         data: jsonObject,
@@ -196,27 +191,25 @@ function Map() {
           "text-size": 11,
           "icon-allow-overlap": true,
           "text-field": ["concat", ["get", "Score"], "%"],
-          "icon-image": "image_20",
-          // [
-          //   'case',
-          //   ['<=', ["get", "Score"], 20],
-          //   "image_20",
-          //   ['<=', ["get", "Score"], 40],
-          //   "image_20",
-          //   ['<=', ["get", "Score"], 60],
-          //   "image_20",
-          //   ['<=', ["get", "Score"], 80],
-          //   "image_20",
-          //   [">", ["get", "Score"], 80],
-          //   "image_20",
-          //   "image_20"
-          // ]
+          "icon-image":
+          [
+            'case',
+            ['<=', ["get", "Score"], 20],
+            "image_20",
+            ['<=', ["get", "Score"], 40],
+            "image_40",
+            ['<=', ["get", "Score"], 60],
+            "image_60",
+            ['<=', ["get", "Score"], 80],
+            "image_80",
+            [">", ["get", "Score"], 80],
+            "image_100",
+            "image_100"
+          ]
         }
       });
     }
-    console.log(jsonObject)
-
-    }, 5000);
+    }, 1000);
   }
 
   const loadRegionSourceAndLayers = (mapInstance) => {
@@ -761,15 +754,35 @@ function Map() {
     setFiltersAndScores(json.data);
   }
 
-  // useEffect(() => {
-  //   filtersAndScores.map((obj)=> {
-      // console.log(filtersAndScores)
-  //   })
-  // }, [filtersAndScores]);
+  const getScores = async () => {
+    const header = {
+      headers: {
+        'Content-Type': 'application/json'
+        }
+      };
+      var body = `{
+        "filters": [
+          {"name":"Village Area", "priority": {"mustHave": false, "niceToHave": true} },
+          {"name":"Town Area", "priority": {"mustHave": false, "niceToHave": true} }
+        ]
+      }`;
+
+      var body = `{"filters":[{"name": "City Area","priority": {"mustHave": true,"niceToHave": false}},{"name": "Town Area","priority": {"mustHave": false,"niceToHave": true}},{"name": "Village Area","priority": {"mustHave": false,"niceToHave": false}},{"name": "Waterfront","priority": {"mustHave": false,"niceToHave": true}},{"name": "Beach access","priority": {"mustHave": false,"niceToHave": true}},{"name": "Gated community","priority": {"mustHave": false,"niceToHave": true}},{"name": "Ranch","priority": {"mustHave": false,"niceToHave": true}},{"name": "Retail","priority": {"mustHave": false,"niceToHave": false}},{"name": "Industrial","priority": {"mustHave": false,"niceToHave": false}},{"name": "Agriculture","priority": {"mustHave": false,"niceToHave": false}},{"name": "Multifamily homes","priority": {"mustHave": false,"niceToHave": false}},{"name": "Below market rental price","priority": {"mustHave": false,"niceToHave": false}},{"name": "High home ownership rate","priority": {"mustHave": false,"niceToHave": false}},{"name": "Below market house price","priority": {"mustHave": false,"niceToHave": false}},{"name": "Newer housing","priority": {"mustHave": false,"niceToHave": false}},{"name": "Low gun ownership","priority": {"mustHave": false,"niceToHave": true}},{"name": "High gun ownership","priority": {"mustHave": false,"niceToHave": true}},{"name": "Low property crime","priority": {"mustHave": false,"niceToHave": false}},{"name": "Near mosque","priority": {"mustHave": false,"niceToHave": false}},{"name": "Low flooding","priority": {"mustHave": false,"niceToHave": false}},{"name": "Near temple","priority": {"mustHave": false,"niceToHave": false}},{"name": "Low humidity","priority": {"mustHave": false,"niceToHave": false}},{"name": "Aging population","priority": {"mustHave": false,"niceToHave": false}},{"name": "Spanish speakers","priority": {"mustHave": false,"niceToHave": true}},{"name": "LGBTQ friendly","priority": {"mustHave": false,"niceToHave": true}},{"name": "New residents","priority": {"mustHave": false,"niceToHave": true}},{"name": "Foreign born","priority": {"mustHave": false,"niceToHave": false}},{"name": "French speakers","priority": {"mustHave": false,"niceToHave": false}},{"name": "Freeway access","priority": {"mustHave": false,"niceToHave": false}},{"name": "Cycling friendly","priority": {"mustHave": false,"niceToHave": false}},{"name": "Intercity rail","priority": {"mustHave": false,"niceToHave": false}},{"name": "Intercity bus","priority": {"mustHave": false,"niceToHave": false}},{"name": "Public schools","priority": {"mustHave": false,"niceToHave": false}},{"name": "Private schools","priority": {"mustHave": false,"niceToHave": false}},{"name": "Fewer students per classroom","priority": {"mustHave": false,"niceToHave": false}},{"name": "Best performing universities","priority": {"mustHave": false,"niceToHave": false}},{"name": "Historical sites","priority": {"mustHave": false,"niceToHave": false}},{"name": "Cinemas","priority": {"mustHave": false,"niceToHave": false}},{"name": "Zoos","priority": {"mustHave": false,"niceToHave": false}},{"name": "Sport venues","priority": {"mustHave": false,"niceToHave": false}},{"name": "Theme parks","priority": {"mustHave": false,"niceToHave": false}},{"name": "Basketball","priority": {"mustHave": false,"niceToHave": false}},{"name": "Tennis","priority": {"mustHave": false,"niceToHave": false}},{"name": "Golf","priority": {"mustHave": false,"niceToHave": true}},{"name": "Baseball","priority": {"mustHave": false,"niceToHave": true}},{"name": "Farmers markets","priority": {"mustHave": false,"niceToHave": true}},{"name": "Crossfit","priority": {"mustHave": false,"niceToHave": true}}]}`;
+
+      let json = await axios.post(`http://www.nomadville.xyz/api/matcher/run`, body, header);
+    setScores(json.data.data);
+  }
 
   useEffect(() => {
+    if(scores.length > 0)
+    createMarkers();
+    // scores.map((obj)=> {
+    //   console.log(obj)
+    // })
+  }, [scores]);
 
-    getAllFiltersScoresFromJson();
+  useEffect(() => {
+    // getAllFiltersScoresFromJson();
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -778,10 +791,10 @@ function Map() {
       center: [-84.13814338407742, 26.573880643027238], 
       zoom: 5,
     });
-
+    mapObj = map;
     loadMarker(map);
     map.on('load', function(){
-      createMarkers(map);
+        getScores();
         loadRegionSourceAndLayers(map);
         loadCountySourceAndLayers(map);
         loadCitySourceAndLayers(map);
